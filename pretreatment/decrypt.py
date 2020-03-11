@@ -3,7 +3,7 @@
 
 'A PDF decryption tool based on "qpdf" (empty password)'
 
-__author__ = 'Mango'
+__author__ = 'MangoPro'
 
 import os
 import sys
