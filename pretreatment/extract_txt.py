@@ -1,3 +1,11 @@
+#! /usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+'Extract text from PDF file'
+
+__author__ = 'MangoPro'
+
+import sys
 from pdfminer.pdfparser import PDFParser, PDFDocument
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfdevice import PDFDevice
@@ -6,12 +14,14 @@ from pdfminer.layout import LAParams, LTTextBoxHorizontal
 from pdfminer.converter import PDFPageAggregator
 
 
-def test():
-    # Open a PDF file.
-    fp = open('1.pdf', 'rb')
+def extractor(fpath: str) -> str:
 
-    # Create a PDF parser object associated with the file object.
-    parser = PDFParser(fp)
+    # Open a PDF file.
+    with open(fpath, 'rb') as fp:
+
+        # Create a PDF parser object associated with the file object.
+        parser = PDFParser(fp)
+
     # Create a PDF document object that stores the document structure.
     doc = PDFDocument()
 
@@ -37,14 +47,22 @@ def test():
     device = PDFPageAggregator(rsrcmgr, laparams=laparams)
     interpreter = PDFPageInterpreter(rsrcmgr, device)
 
+    # Store text data
+    res = []
+
     # Process each page contained in the document.
     for page in doc.get_pages():
-        # The layout analyzer gives a "LTPage" object for each page in the PDF document. 
+
+        # The layout analyzer gives a "LTPage" object for each page in the PDF document.
         interpreter.process_page(page)
         layout = device.get_result()
-        
+
+        # Extract text from TextBox
         for text_box in layout:
             if(isinstance(text_box, LTTextBoxHorizontal)):
-                with open(r'2.txt', 'a', encoding='utf-8') as f:
-                    results = text_box.get_text()
-                    print(results, end="")
+                res += text_box.get_text()
+    return res
+
+
+if __name__ == "__main__":
+    extractor(sys.argv[1])
