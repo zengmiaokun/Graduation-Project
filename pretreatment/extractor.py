@@ -1,11 +1,13 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-'Extract text from PDF file'
+'Clean and extract data'
 
 __author__ = 'MangoPro'
 
+
 import sys
+import re
 from pdfminer.pdfparser import PDFParser, PDFDocument
 from pdfminer.pdfinterp import PDFResourceManager, PDFPageInterpreter
 from pdfminer.pdfdevice import PDFDevice
@@ -14,7 +16,8 @@ from pdfminer.layout import LAParams, LTTextBoxHorizontal
 from pdfminer.converter import PDFPageAggregator
 
 
-def extractor(fpath: str) -> str:
+def extract_text(fpath: str) -> str:
+    'Extract text from PDF file'
 
     # Open a PDF file.
     with open(fpath, 'rb') as fp:
@@ -61,8 +64,32 @@ def extractor(fpath: str) -> str:
         for text_box in layout:
             if(isinstance(text_box, LTTextBoxHorizontal)):
                 res += text_box.get_text()
+    return ''.join(res)
+
+
+def extract_data(input_text: str) -> dict:
+    'Extract data from text'
+
+    # Put result in a dict
+    res = dict()
+
+    # Extract the abstract section using regular expressions
+    pattern_abs = r'(\[\s*摘要\s*\][\s]*)([\s\S]*)(\[\s*关键词\s*\])'
+    abstract_raw = re.search(pattern_abs, input_text)[2]
+
+    # Remove extra special characters
+    abstract_value = re.sub(r'[\s\t\n]*', '', abstract_raw, count=0)
+
+    # Put the content of abstract section in the dict
+    res['abstract'] = abstract_value
+
     return res
 
 
 if __name__ == "__main__":
-    extractor(sys.argv[1])
+
+    import time
+    start = time.time()
+    text = extract_text(sys.argv[1])
+    print(extract_data(text))
+    print("Time: %.2fs" % (time.time()-start))
