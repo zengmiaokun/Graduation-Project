@@ -12,12 +12,12 @@ def main(data: iter):
     for item in data:
         # Chinese word segmentation
         res = segment(item[0])
-        clean(res, sw_set)
+        res = clean(res, sw_set)
         print(res)
 
 def segment(corpus: str) -> list:
-    corpus = re.sub('[%s]' % re.escape(string.punctuation + r'\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）'), '', corpus)
-    return jieba.lcut(corpus, cut_all=False)
+    words_list = re.sub('[%s]' % re.escape(string.punctuation + r'\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）'), '', corpus)
+    return jieba.lcut(words_list, cut_all=False)
 
 def get_sw():
     stopwords = dict()
@@ -40,9 +40,14 @@ def get_sw():
     print('='*30 + '\n')
     return sw_set
 
-def clean(corpus: str, sw_set: set) -> str:
+def clean(words_list: list, sw_set: set) -> str:
     # Load stopwords
-    pass
+    res = []
+    for word in words_list:
+        if word in sw_set:
+            continue
+        res.append(word)
+    return res
     
 
 
@@ -57,6 +62,6 @@ if __name__ == "__main__":
     testdb = mdpool(**dbconfig)
 
     # Get data
-    data = testdb.fetch_all(r"SELECT `corpus` FROM `corpus_data` limit 0,300")
+    data = testdb.fetch_all(r"SELECT `corpus` FROM `corpus_data`")
 
     main(data)
