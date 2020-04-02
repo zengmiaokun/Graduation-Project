@@ -66,8 +66,6 @@ def cluster(data: dict, mean = 'kmeans', para = 300) -> list:
     print("PASS")
     return analyzer.kmeans(para) if mean == 'kmeans' else analyzer.repeatedBisection(para) 
 
-
-
 if __name__ == "__main__":
     import sys
     sys.path.append("../")
