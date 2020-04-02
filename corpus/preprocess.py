@@ -2,21 +2,29 @@
 
 import re
 import string
+import numpy
 import jieba
 import jieba.posseg
 import jieba.analyse
+from pyhanlp import *
 
 # main
 def main(data: iter):
     sw_set = get_sw()
+    res_list = []
     for item in data:
+        res = list(item)
         # Chinese word segmentation
-        res = segment(item[0])
-        res = clean(res, sw_set)
-        print(res)
+        res[3] = segment(item[3])
+        res[3] = clean(res[3], sw_set)
+        res_list.append(res)
+        # print(res)
+
+    return res_list
 
 def segment(corpus: str) -> list:
     words_list = re.sub('[%s]' % re.escape(string.punctuation + r'\s+\.\!\/_,$%^*(+\"\']+|[+——！，。？、~@#￥%……&*（）'), '', corpus)
+    # jieba.enable_parallel(2)
     return jieba.lcut(words_list, cut_all=False)
 
 def get_sw():
@@ -50,6 +58,15 @@ def clean(words_list: list, sw_set: set) -> str:
     return res
     
 
+def cluster(data: dict, mean = 'kmeans', para = 300) -> list:
+    ClusterAnalyzer = JClass('com.hankcs.hanlp.mining.cluster.ClusterAnalyzer')
+    analyzer = ClusterAnalyzer()
+    for k,v in data.items():
+        analyzer.addDocument(k,v)
+    print("PASS")
+    return analyzer.kmeans(para) if mean == 'kmeans' else analyzer.repeatedBisection(para) 
+
+
 
 if __name__ == "__main__":
     import sys
@@ -62,6 +79,18 @@ if __name__ == "__main__":
     testdb = mdpool(**dbconfig)
 
     # Get data
-    data = testdb.fetch_all(r"SELECT `corpus` FROM `corpus_data`")
-
-    main(data)
+    data_all = testdb.fetch_all(r"SELECT * FROM `corpus_data`")
+    # res_all = main(data_all)
+    # numpy.save('corpus', res_all, allow_pickle=True, fix_imports=True)
+    
+    raw_data = numpy.load('corpus.npy', allow_pickle=True)
+    data = dict()
+    for item in raw_data:
+        if str(item[1]) not in data.keys():
+            data[str(item[1])] = item[3]
+        else:
+            data[str(item[1])] += item[3]
+    for k, v in data.items():
+        data[k] = ', '.join(v)
+    res = [i.toString() for i in cluster(data).toArray()]
+    numpy.save('corpus_cluster', res, allow_pickle=True, fix_imports=True)
